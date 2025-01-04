@@ -26,12 +26,18 @@ async def chat(message: str):
         # Parse the response
         if response.status_code == 200:
             # Ollama returns multiple JSON objects, one per line
-            last_response = None
+            # Concatenate all responses to get the full message
+            full_response = ""
             for line in response.text.strip().split('\n'):
-                last_response = json.loads(line)
+                try:
+                    resp_obj = json.loads(line)
+                    if resp_obj.get('response'):
+                        full_response += resp_obj['response']
+                except json.JSONDecodeError:
+                    continue
             
-            if last_response and 'response' in last_response:
-                return {"response": last_response['response']}
+            if full_response:
+                return {"response": full_response}
         
         return {"response": "Error: Unable to get response from LLM"}
     except Exception as e:

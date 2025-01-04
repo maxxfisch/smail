@@ -75,7 +75,9 @@
             // Add user message to chat
             addMessage(message, 'user');
             messageInput.value = '';
-
+            
+            // Disable input while processing
+            messageInput.disabled = true;
             try {
                 const response = await fetch('/chat', {
                     method: 'POST',
@@ -86,9 +88,18 @@
                 });
 
                 const data = await response.json();
-                addMessage(data.response, 'bot');
+                if (data.response) {
+                    addMessage(data.response, 'bot');
+                } else {
+                    addMessage('Error: No response from LLM', 'bot');
+                }
             } catch (error) {
+                console.error('Error:', error);
                 addMessage('Error: Unable to get response', 'bot');
+            } finally {
+                // Re-enable input
+                messageInput.disabled = false;
+                messageInput.focus();
             }
         }
 
