@@ -52,20 +52,23 @@
 </head>
 <body>
     <h1>Personal Assistant Profile</h1>
+    {% if profile.get('last_updated') %}
+    <p style="color: #666; font-style: italic;">Last updated: {{ profile.get('last_updated') }}</p>
+    {% endif %}
     <form id="profileForm" method="POST" action="/save_profile">
         <div class="section">
             <h2>Basic Information</h2>
             <div class="form-group">
                 <label for="name">Full Name:</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" required value="{{ profile.get('name', '') }}">
             </div>
             <div class="form-group">
                 <label for="birthdate">Birthdate:</label>
-                <input type="date" id="birthdate" name="birthdate" required>
+                <input type="date" id="birthdate" name="birthdate" required value="{{ profile.get('birthdate', '') }}">
             </div>
             <div class="form-group">
                 <label for="location">Location:</label>
-                <input type="text" id="location" name="location" required>
+                <input type="text" id="location" name="location" required value="{{ profile.get('location', '') }}">
             </div>
         </div>
 
@@ -73,11 +76,11 @@
             <h2>Personal Context</h2>
             <div class="form-group">
                 <label for="occupation">Occupation/Studies:</label>
-                <input type="text" id="occupation" name="occupation" required>
+                <input type="text" id="occupation" name="occupation" required value="{{ profile.get('occupation', '') }}">
             </div>
             <div class="form-group">
                 <label for="interests">Interests & Hobbies:</label>
-                <textarea id="interests" name="interests" required></textarea>
+                <textarea id="interests" name="interests" required>{{ profile.get('interests', '') }}</textarea>
             </div>
         </div>
 
@@ -85,11 +88,11 @@
             <h2>Goals & Preferences</h2>
             <div class="form-group">
                 <label for="goals">Current Goals:</label>
-                <textarea id="goals" name="goals" required></textarea>
+                <textarea id="goals" name="goals" required>{{ profile.get('goals', '') }}</textarea>
             </div>
             <div class="form-group">
                 <label for="preferences">Personal Preferences:</label>
-                <textarea id="preferences" name="preferences" placeholder="e.g., preferred working hours, communication style, etc." required></textarea>
+                <textarea id="preferences" name="preferences" placeholder="e.g., preferred working hours, communication style, etc." required>{{ profile.get('preferences', '') }}</textarea>
             </div>
         </div>
 

@@ -20,7 +20,7 @@ class Storage:
         # Merge with existing data if it exists
         existing_data = self.load_profile()
         existing_data.update(profile_data)
-        existing_data["last_updated"] = str(datetime.now())
+        existing_data["last_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         with open(self.profile_path, 'w') as f:
             json.dump(existing_data, f, indent=2)
