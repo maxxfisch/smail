@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -26,28 +26,36 @@ async def root(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("chat.html", {"request": request})
 
 @app.post("/chat")
-async def chat(message: str):
+async def chat(message: str = Form(...)):
     try:
+        print(f"Received message: {message}")  # Debug print
+        
         # Send request to Ollama
         response = requests.post('http://localhost:11434/api/generate',
                                json={
                                    "model": "llama2",
                                    "prompt": message
-                               })
+                               },
+                               stream=True)  # Enable streaming
+        
+        print(f"Ollama status code: {response.status_code}")  # Debug print
         
         # Parse the response
         if response.status_code == 200:
             # Ollama returns multiple JSON objects, one per line
-            last_response = None
+            # Concatenate all responses to get the full message
+            full_response = ""
             for line in response.text.strip().split('\n'):
-                last_response = json.loads(line)
+                try:
+                    resp_obj = json.loads(line)
+                    if resp_obj.get('response'):
+                        full_response += resp_obj['response']
+                except json.JSONDecodeError:
+                    continue
             
-            if last_response and 'response' in last_response:
-                return {"response": last_response['response']}
+            if full_response:
+                return {"response": full_response}
         
-        return {"response": last_response['response']}
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Invalid JSON response from Ollama")
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+        return {"response": "Error: Unable to get response from LLM"}
+    except Exception as e:
+        return {"response": f"Error: {str(e)}"}
