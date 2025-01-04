@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import requests
 import json
+from datetime import datetime
 from storage import Storage
 
 app = FastAPI()
@@ -32,19 +33,23 @@ async def save_profile(
     goals: str = Form(...),
     preferences: str = Form(...)
 ):
-    profile_data = {
-        "name": name,
-        "birthdate": birthdate,
-        "location": location,
-        "occupation": occupation,
-        "interests": interests,
-        "goals": goals,
-        "preferences": preferences,
-        "last_updated": str(datetime.now())
-    }
-    
-    storage.save_profile(profile_data)
-    return {"success": True}
+    try:
+        profile_data = {
+            "name": name,
+            "birthdate": birthdate,
+            "location": location,
+            "occupation": occupation,
+            "interests": interests,
+            "goals": goals,
+            "preferences": preferences,
+            "last_updated": str(datetime.now())
+        }
+        
+        storage.save_profile(profile_data)
+        return {"success": True}
+    except Exception as e:
+        print(f"Error saving profile: {str(e)}")  # Debug print
+        return {"success": False, "error": str(e)}
 
 @app.post("/chat")
 async def chat(message: str = Form(...)):
