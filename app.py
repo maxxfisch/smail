@@ -25,32 +25,25 @@ class ChatResponse(BaseModel):
 async def root(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("chat.html", {"request": request})
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat(message: str) -> Dict[str, str]:
-    if not message or message.isspace():
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
-
+@app.post("/chat")
+async def chat(message: str):
     try:
-        response = requests.post(
-            OLLAMA_URL,
-            json={"model": MODEL_NAME, "prompt": message},
-            timeout=30
-        )
-        response.raise_for_status()
-    except requests.ConnectionError:
-        raise HTTPException(status_code=503, detail="Ollama service is not available")
-    except requests.Timeout:
-        raise HTTPException(status_code=504, detail="Request to Ollama timed out")
-    except requests.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Error communicating with Ollama: {str(e)}")
-
-    try:
-        last_response: Optional[Dict] = None
-        for line in response.text.strip().split('\n'):
-            last_response = json.loads(line)
+        # Send request to Ollama
+        response = requests.post('http://localhost:11434/api/generate',
+                               json={
+                                   "model": "llama2",
+                                   "prompt": message
+                               })
         
-        if not last_response or 'response' not in last_response:
-            raise HTTPException(status_code=500, detail="Invalid response from Ollama")
+        # Parse the response
+        if response.status_code == 200:
+            # Ollama returns multiple JSON objects, one per line
+            last_response = None
+            for line in response.text.strip().split('\n'):
+                last_response = json.loads(line)
+            
+            if last_response and 'response' in last_response:
+                return {"response": last_response['response']}
         
         return {"response": last_response['response']}
     except json.JSONDecodeError:

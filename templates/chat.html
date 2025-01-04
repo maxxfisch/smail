@@ -134,7 +134,6 @@
             
             addMessage(message, 'user');
             messageInput.value = '';
-            typingIndicator.style.display = 'block';
 
             try {
                 const response = await fetch('/chat', {
@@ -146,20 +145,9 @@
                 });
 
                 const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.detail || 'Failed to get response');
-                }
-                
                 addMessage(data.response, 'bot');
             } catch (error) {
-                addMessage(error.message || 'Error: Unable to get response', 'error');
-            } finally {
-                isProcessing = false;
-                sendButton.disabled = false;
-                messageInput.disabled = false;
-                typingIndicator.style.display = 'none';
-                messageInput.focus();
+                addMessage('Error: Unable to get response', 'bot');
             }
         }
 
