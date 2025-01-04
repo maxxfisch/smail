@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-
-from typing import Dict, Optional
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import requests
 import json
@@ -10,6 +8,11 @@ from pydantic import BaseModel
 import uvicorn
 
 app = FastAPI()
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Initialize templates
 templates = Jinja2Templates(directory="templates")
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
