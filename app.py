@@ -21,7 +21,7 @@ async def chat(message: str = Form(...)):
         # Send request to Ollama
         response = requests.post('http://localhost:11434/api/generate',
                                json={
-                                   "model": "llama2",
+                                   "model": "codellama:7b-instruct",
                                    "prompt": message
                                },
                                stream=True)  # Enable streaming
