@@ -134,7 +134,7 @@ User message: {message}"""
                 # Extract and store any facts from the conversation
                 facts = memory_manager.extract_facts_from_conversation(message, full_response)
                 for fact in facts:
-                    memory_manager.add_fact(fact, "conversation")
+                    memory_manager.add_fact(fact)
                 
                 return {"response": full_response}
             else:
