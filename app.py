@@ -9,16 +9,18 @@ import json
 from datetime import datetime
 from storage import Storage
 from conversation import ConversationHistory
+from memory_manager import MemoryManager
 
 app = FastAPI()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Initialize templates, storage, and conversation history
+# Initialize components
 templates = Jinja2Templates(directory="templates")
 storage = Storage()
 conversation_history = ConversationHistory()
+memory_manager = MemoryManager()
 
 # Mount static files directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -81,18 +83,24 @@ async def chat(
 
         print(f"Received message: {message}")  # Debug print
         
-        # Get personal context and conversation history
-        context = storage.get_context_for_prompt()
+        # Get all available context
+        profile_context = storage.get_context_for_prompt()
         conv_context = conversation_history.get_context_string(session)
+        memory_context = memory_manager.get_context_for_prompt(message)
         
         # Construct the full prompt
-        full_prompt = f"""You are my personal AI assistant. Here's some context about me:
+        full_prompt = f"""You are my personal AI assistant. Here's what I know about you:
 
-{context}
+Profile Information:
+{profile_context}
 
+Recent Conversation:
 {conv_context}
 
-Please keep this context in mind when responding.
+Relevant Memories:
+{memory_context}
+
+Please use this context to provide a personalized response.
 
 User message: {message}"""
 
@@ -128,6 +136,15 @@ User message: {message}"""
             if full_response:
                 # Add assistant's response to history
                 conversation_history.add_message(session, "assistant", full_response)
+                
+                # Store conversation in long-term memory
+                memory_manager.add_conversation(session, message, full_response)
+                
+                # Extract and store any facts from the conversation
+                facts = memory_manager.extract_facts_from_conversation(message, full_response)
+                for fact in facts:
+                    memory_manager.add_fact(fact, "conversation")
+                
                 return {"response": full_response}
         
         return {"response": "Error: Unable to get response from LLM"}
