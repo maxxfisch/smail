@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Form, Cookie, Response
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 import requests
 import json
 import uuid
@@ -15,6 +16,9 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 storage = Storage()
 conversation_history = ConversationHistory()
+
+# Mount static files directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
