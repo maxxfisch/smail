@@ -103,12 +103,17 @@
                     method: 'POST',
                     body: formData
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
                 if (result.success) {
                     alert('Profile saved successfully!');
                     window.location.href = '/';
                 } else {
-                    alert('Error saving profile: ' + result.error);
+                    throw new Error(result.error || 'Unknown error occurred');
                 }
             } catch (error) {
                 alert('Error saving profile: ' + error);
