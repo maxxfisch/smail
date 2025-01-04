@@ -17,8 +17,13 @@ class Storage:
         return {}
 
     def save_profile(self, profile_data: Dict[str, Any]) -> None:
+        # Merge with existing data if it exists
+        existing_data = self.load_profile()
+        existing_data.update(profile_data)
+        existing_data["last_updated"] = str(datetime.now())
+        
         with open(self.profile_path, 'w') as f:
-            json.dump(profile_data, f, indent=2)
+            json.dump(existing_data, f, indent=2)
 
     def get_context_for_prompt(self) -> str:
         """Generate a context string from the profile data"""

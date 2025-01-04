@@ -1,20 +1,23 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, Cookie, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 import requests
 import json
+from datetime import datetime
 from storage import Storage
+from conversation import ConversationHistory
 
 app = FastAPI()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Initialize templates and storage
+# Initialize templates, storage, and conversation history
 templates = Jinja2Templates(directory="templates")
 storage = Storage()
+conversation_history = ConversationHistory()
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "llama3.2"
@@ -61,21 +64,36 @@ async def save_profile(
         return {"success": False, "error": str(e)}
 
 @app.post("/chat")
-async def chat(message: str = Form(...)):
+async def chat(
+    message: str = Form(...),
+    session: str = Cookie(None),
+    response: Response = None
+):
     try:
+        # Create or get session ID
+        if not session:
+            session = str(uuid.uuid4())
+            response.set_cookie(key="session", value=session)
+
         print(f"Received message: {message}")  # Debug print
         
-        # Get personal context
+        # Get personal context and conversation history
         context = storage.get_context_for_prompt()
+        conv_context = conversation_history.get_context_string(session)
         
         # Construct the full prompt
         full_prompt = f"""You are my personal AI assistant. Here's some context about me:
 
 {context}
 
+{conv_context}
+
 Please keep this context in mind when responding.
 
 User message: {message}"""
+
+        # Add user message to history
+        conversation_history.add_message(session, "user", message)
         
         # Send request to Ollama
         response = requests.post('http://localhost:11434/api/generate',
@@ -104,6 +122,8 @@ User message: {message}"""
                         continue
             
             if full_response:
+                # Add assistant's response to history
+                conversation_history.add_message(session, "assistant", full_response)
                 return {"response": full_response}
         
         return {"response": "Error: Unable to get response from LLM"}
