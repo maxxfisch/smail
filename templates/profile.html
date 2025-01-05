@@ -52,6 +52,7 @@
 </head>
 <body>
     <h1>Personal Assistant Profile</h1>
+    {% include "nav.html" %}
     {% if profile.get('last_updated') %}
     <p style="color: #666; font-style: italic;">Last updated: {{ profile.get('last_updated') }}</p>
     {% endif %}
