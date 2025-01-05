@@ -43,14 +43,14 @@ async def view_memories(request: Request) -> HTMLResponse:
     
     if facts["metadatas"]:
         for idx, metadata in enumerate(facts["metadatas"]):
-            category = metadata["category"]
+            category = metadata.get("category", "uncategorized")
             if category not in categorized_facts:
                 categorized_facts[category] = []
             
             categorized_facts[category].append({
                 "content": facts["documents"][idx],
-                "timestamp": metadata["timestamp"],
-                "confidence": metadata["confidence"]
+                "timestamp": metadata.get("timestamp", "Unknown"),
+                "confidence": metadata.get("confidence", "medium")
             })
     
     recent_conversations = []
@@ -58,8 +58,8 @@ async def view_memories(request: Request) -> HTMLResponse:
         for idx, metadata in enumerate(conversations["metadatas"]):
             recent_conversations.append({
                 "content": conversations["documents"][idx],
-                "timestamp": metadata["timestamp"],
-                "session": metadata["session_id"]
+                "timestamp": metadata.get("timestamp", "Unknown"),
+                "session": metadata.get("session_id", "Unknown")
             })
     
     return templates.TemplateResponse(
