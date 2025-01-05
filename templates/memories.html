@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMAIL Memory System</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="alternate icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .nav-bar {
+            margin-bottom: 20px;
+        }
+        
+        .nav-bar a {
+            color: #2196f3;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .memory-item {
+            border-left: 3px solid #2196f3;
+            padding: 10px;
+            margin: 10px 0;
+            background: #f8f9fa;
+        }
+        
+        .timestamp {
+            color: #666;
+            font-size: 0.8em;
+        }
+        
+        .confidence {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .confidence.high {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .confidence.medium {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        h2 {
+            color: #1976d2;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 5px;
+        }
+        
+        .category {
+            margin-bottom: 30px;
+        }
+        
+        .category-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <a href="/">Chat</a>
+        <a href="/profile">Profile</a>
+        <a href="/memories">Memories</a>
+    </div>
+    
+    <div class="section">
+        <h2>Learned Facts</h2>
+        {% for category, items in facts.items() %}
+        <div class="category">
+            <div class="category-title">{{ category.title() }}</div>
+            {% for fact in items %}
+            <div class="memory-item">
+                {{ fact.content }}
+                <div class="timestamp">{{ fact.timestamp }}</div>
+                <span class="confidence {{ fact.confidence }}">{{ fact.confidence }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="section">
+        <h2>Recent Conversations</h2>
+        {% for conv in conversations %}
+        <div class="memory-item">
+            <pre>{{ conv.content }}</pre>
+            <div class="timestamp">{{ conv.timestamp }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
