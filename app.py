@@ -27,12 +27,16 @@ class ChatResponse(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("chat.html", {"request": request})
+    return templates.TemplateResponse("chat.html", {"request": request, "active_page": "chat"})
 
 @app.get("/profile", response_class=HTMLResponse)
 async def profile_form(request: Request) -> HTMLResponse:
     profile_data = storage.load_profile()
-    return templates.TemplateResponse("profile.html", {"request": request, "profile": profile_data})
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "profile": profile_data,
+        "active_page": "profile"
+    })
 
 @app.get("/memories", response_class=HTMLResponse)
 async def view_memories(request: Request) -> HTMLResponse:
@@ -67,7 +71,8 @@ async def view_memories(request: Request) -> HTMLResponse:
         {
             "request": request,
             "facts": categorized_facts,
-            "conversations": recent_conversations[-10:]  # Show last 10 conversations
+            "conversations": recent_conversations[-10:],  # Show last 10 conversations
+            "active_page": "memories"
         }
     )
 

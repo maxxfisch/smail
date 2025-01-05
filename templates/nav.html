@@ -1,0 +1,54 @@
+<div class="nav-bar">
+    <a href="/" class="nav-item {% if active_page == 'chat' %}active{% endif %}" title="Chat">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </a>
+    <a href="/profile" class="nav-item {% if active_page == 'profile' %}active{% endif %}" title="Profile">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+    </a>
+    <a href="/memories" class="nav-item {% if active_page == 'memories' %}active{% endif %}" title="Memories">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 3 L22 12 L18 21 L6 21 L2 12 L6 3 Z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+    </a>
+</div>
+
+<style>
+.nav-bar {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 50px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 15px;
+}
+
+.nav-item {
+    color: #666;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-item:hover {
+    background: #f0f0f0;
+    color: #2196f3;
+    transform: scale(1.1);
+}
+
+.nav-item.active {
+    color: #2196f3;
+    background: #e3f2fd;
+}
+</style>
