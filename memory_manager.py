@@ -93,27 +93,23 @@ class MemoryManager:
         return facts
 
     def get_context_for_prompt(self, current_message: str) -> str:
-        memories = self.get_relevant_memories(current_message)
-        categorized_facts = {}
+        memories = self.get_relevant_memories(current_message, limit=3)  # Reduced from 5 to 3
+        context_parts = []
         
+        relevant_facts = []
         for fact in memories["facts"]:
             metadata = self.facts.get(where={"document": fact})
             if metadata and metadata["metadatas"]:
-                category = metadata["metadatas"][0]["category"]
-                if category not in categorized_facts:
-                    categorized_facts[category] = []
-                categorized_facts[category].append(fact)
+                confidence = metadata["metadatas"][0].get("confidence", "medium")
+                if confidence == "high":
+                    relevant_facts.append(fact)
         
-        context_parts = []
-        
-        if categorized_facts:
-            context_parts.append("What I know about you:")
-            for category, facts in categorized_facts.items():
-                context_parts.append(f"\n{category.title()}:")
-                context_parts.extend(f"- {fact}" for fact in facts)
+        if relevant_facts:
+            context_parts.extend(relevant_facts)
         
         if memories["conversations"]:
-            context_parts.append("\nRelevant past conversations:")
-            context_parts.extend(f"- {conv}" for conv in memories["conversations"])
+            most_relevant = memories["conversations"][0]
+            if most_relevant and len(most_relevant.strip()) > 0:
+                context_parts.append(most_relevant)
         
-        return "\n".join(context_parts)
+        return "\n".join(context_parts) if context_parts else ""

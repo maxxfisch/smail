@@ -111,15 +111,25 @@ async def chat(
         conv_context = conversation_history.get_context_string(session)
         memory_context = memory_manager.get_context_for_prompt(message)
         
-        full_prompt = f"""You are my personal AI assistant. Here's what I know about you:
+        full_prompt = f"""You are my personal AI assistant. Focus on responding directly to the current message while keeping relevant context in mind. Be concise and natural in your responses.
 
-{profile_context}
-
+Recent Context:
 {conv_context}
 
+Relevant Background:
 {memory_context}
 
-User message: {message}"""
+Profile Info:
+{profile_context}
+
+Current message: {message}
+
+Remember:
+- Respond directly to the current message
+- Only reference previous context if directly relevant
+- Keep responses concise and natural
+- Don't list out everything you know about me
+- If you learn new information, update your understanding without mentioning it"""
 
         conversation_history.add_message(session, "user", message)
         
