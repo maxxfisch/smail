@@ -8,73 +8,133 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f9f9f9;
         }
         #chat-container {
             height: 400px;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             overflow-y: auto;
             margin-bottom: 20px;
             padding: 10px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .message {
             margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 70%;
+            word-wrap: break-word;
         }
         .user-message {
             background-color: #e3f2fd;
-            margin-left: 20%;
+            margin-left: auto;
+            color: #1565c0;
         }
         .bot-message {
             background-color: #f5f5f5;
-            margin-right: 20%;
+            margin-right: auto;
+            color: #333;
+        }
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            margin-right: auto;
         }
         #input-container {
             display: flex;
             gap: 10px;
+            position: relative;
         }
         #message-input {
             flex-grow: 1;
-            padding: 10px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        #message-input:focus {
+            outline: none;
+            border-color: #2196f3;
+            box-shadow: 0 0 0 2px rgba(33,150,243,0.2);
         }
         button {
-            padding: 10px 20px;
+            padding: 12px 24px;
             background-color: #2196f3;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
         }
         button:hover {
             background-color: #1976d2;
+        }
+        button:disabled {
+            background-color: #bdbdbd;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #2196f3;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .typing-indicator {
+            padding: 12px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            margin-right: auto;
+            color: #666;
+            display: none;
         }
     </style>
 </head>
 <body>
     <h1>SMAIL Chat Interface</h1>
     <div id="chat-container"></div>
+    <div class="typing-indicator" id="typing-indicator">AI is thinking...</div>
     <div id="input-container">
         <input type="text" id="message-input" placeholder="Type your message...">
-        <button onclick="sendMessage()">Send</button>
+        <button id="send-button" onclick="sendMessage()">Send</button>
     </div>
 
     <script>
         const chatContainer = document.getElementById('chat-container');
         const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const typingIndicator = document.getElementById('typing-indicator');
 
         messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey && !isProcessing) {
+                e.preventDefault();
                 sendMessage();
             }
         });
 
+        let isProcessing = false;
+
         async function sendMessage() {
             const message = messageInput.value.trim();
-            if (!message) return;
+            if (!message || isProcessing) return;
 
-            // Add user message to chat
+            isProcessing = true;
+            sendButton.disabled = true;
+            messageInput.disabled = true;
+            
             addMessage(message, 'user');
             messageInput.value = '';
+            typingIndicator.style.display = 'block';
 
             try {
                 const response = await fetch('/chat', {
@@ -86,19 +146,36 @@
                 });
 
                 const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to get response');
+                }
+                
                 addMessage(data.response, 'bot');
             } catch (error) {
-                addMessage('Error: Unable to get response', 'bot');
+                addMessage(error.message || 'Error: Unable to get response', 'error');
+            } finally {
+                isProcessing = false;
+                sendButton.disabled = false;
+                messageInput.disabled = false;
+                typingIndicator.style.display = 'none';
+                messageInput.focus();
             }
         }
 
-        function addMessage(message, sender) {
+        function addMessage(message, type) {
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}-message`;
+            
+            const textContent = document.createElement('span');
+            textContent.textContent = message;
+            messageDiv.appendChild(textContent);
+            
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
+
+        messageInput.focus();
     </script>
 </body>
 </html>
