@@ -56,4 +56,4 @@ async def chat(message: str) -> Dict[str, str]:
         raise HTTPException(status_code=500, detail="Invalid JSON response from Ollama")
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
