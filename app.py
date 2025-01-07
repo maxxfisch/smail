@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 import requests
 import json
 from pydantic import BaseModel
+import uvicorn
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -53,3 +54,6 @@ async def chat(message: str) -> Dict[str, str]:
         return {"response": last_response['response']}
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Invalid JSON response from Ollama")
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
