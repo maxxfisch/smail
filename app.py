@@ -15,7 +15,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "llama2"
+MODEL_NAME = "llama3.2"
 
 class ChatResponse(BaseModel):
     response: str
