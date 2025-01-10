@@ -20,7 +20,7 @@ conversation_history = ConversationHistory()
 memory_manager = MemoryManager()
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "llama3.2"
+MODEL_NAME = "llama3.2:latest"
 
 class ChatResponse(BaseModel):
     response: str
@@ -107,12 +107,12 @@ async def save_profile(
 async def chat(
     message: str = Form(...),
     session: Optional[str] = Cookie(None),
-    response_obj: Response = None
+    response: Response = None
 ) -> Dict:
     try:
         if not session:
             session = str(uuid.uuid4())
-            response_obj.set_cookie(key="session", value=session)
+            response.set_cookie(key="session", value=session)
         
         profile_context = storage.get_context_for_prompt()
         conv_context = conversation_history.get_context_string(session)
@@ -151,7 +151,7 @@ Remember:
         
         if llm_response.status_code == 200:
             full_response = ""
-            for line in llm_response.iter_lines():
+            for line in response.iter_lines():
                 if line:
                     try:
                         resp_obj = json.loads(line.decode('utf-8'))
