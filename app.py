@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Form, Cookie, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 import requests
 import json
 from datetime import datetime
