@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Form, Cookie, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 import requests
 import json
 from datetime import datetime
@@ -151,7 +151,7 @@ Remember:
         
         if llm_response.status_code == 200:
             full_response = ""
-            for line in llm_response.iter_lines():
+            for line in response.iter_lines():
                 if line:
                     try:
                         resp_obj = json.loads(line.decode('utf-8'))
