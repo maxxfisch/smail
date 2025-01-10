@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Form, Cookie, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
 import requests
 import json
 from datetime import datetime
@@ -107,12 +107,12 @@ async def save_profile(
 async def chat(
     message: str = Form(...),
     session: Optional[str] = Cookie(None),
-    response: Response = None
+    response_obj: Response = None
 ) -> Dict:
     try:
         if not session:
             session = str(uuid.uuid4())
-            response.set_cookie(key="session", value=session)
+            response_obj.set_cookie(key="session", value=session)
         
         profile_context = storage.get_context_for_prompt()
         conv_context = conversation_history.get_context_string(session)
@@ -151,7 +151,7 @@ Remember:
         
         if llm_response.status_code == 200:
             full_response = ""
-            for line in response.iter_lines():
+            for line in llm_response.iter_lines():
                 if line:
                     try:
                         resp_obj = json.loads(line.decode('utf-8'))
