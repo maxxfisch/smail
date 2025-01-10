@@ -150,7 +150,12 @@
                 const data = await response.json();
                 addMessage(data.response, 'bot');
             } catch (error) {
-                addMessage('Error: Unable to get response', 'bot');
+                addMessage('Error: Unable to get response', 'error');
+            } finally {
+                isProcessing = false;
+                sendButton.disabled = false;
+                messageInput.disabled = false;
+                messageInput.focus();
             }
         }
 
