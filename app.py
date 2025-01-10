@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Form, Cookie, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
 import requests
 import json
 from datetime import datetime
@@ -20,7 +20,7 @@ conversation_history = ConversationHistory()
 memory_manager = MemoryManager()
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "llama3.2"
+MODEL_NAME = "llama3.2:latest"
 
 class ChatResponse(BaseModel):
     response: str
@@ -143,7 +143,7 @@ Remember:
         llm_response = requests.post(
             'http://localhost:11434/api/generate',
             json={
-                "model": MODEL_NAME,
+                "model": "codellama:7b-instruct",
                 "prompt": full_prompt
             },
             stream=True
