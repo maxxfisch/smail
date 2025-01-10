@@ -4,7 +4,7 @@ A simple web interface for interacting with a local LLM using Ollama.
 
 ## Prerequisites
 
-- Python 3.8 or higher
+- Python 3.8 or higher (required for both installation and runtime)
 - Ollama installed and running locally
 - A compatible LLM model (default: llama2)
 
