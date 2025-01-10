@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Form, Cookie, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 import requests
 import json
 from datetime import datetime
@@ -9,6 +10,7 @@ from storage import Storage
 from conversation import ConversationHistory
 from memory_manager import MemoryManager
 from typing import Dict, List, Optional
+import uuid
 
 app = FastAPI()
 
