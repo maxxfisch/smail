@@ -115,6 +115,9 @@
         const sendButton = document.getElementById('send-button');
         const typingIndicator = document.getElementById('typing-indicator');
 
+        // Load chat history when page loads
+        window.addEventListener('load', loadChatHistory);
+
         messageInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !e.shiftKey && !isProcessing) {
                 e.preventDefault();
@@ -123,6 +126,20 @@
         });
 
         let isProcessing = false;
+
+        async function loadChatHistory() {
+            try {
+                const response = await fetch('/chat/history');
+                const messages = await response.json();
+                
+                messages.forEach(msg => {
+                    addMessage(msg.content, msg.type);
+                });
+            } catch (error) {
+                console.error('Failed to load chat history:', error);
+                addMessage('Failed to load chat history', 'error');
+            }
+        }
 
         async function sendMessage() {
             const message = messageInput.value.trim();
