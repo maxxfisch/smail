@@ -27,10 +27,36 @@ class ChatResponse(BaseModel):
     response: str
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request, session: Optional[str] = Cookie(None)) -> HTMLResponse:
-    chat_history = []
-    if session:
-        chat_history = conversation_history.get_messages(session)
+async def root(
+    request: Request,
+    session: Optional[str] = Cookie(None),
+    response: Response = None
+) -> HTMLResponse:
+    if not session:
+        session = str(uuid.uuid4())
+        response.set_cookie(key="session", value=session)
+    
+    # Load chat history from both conversation history and memory manager
+    chat_history = conversation_history.get_messages(session)
+    
+    # If no chat history in memory, try to load from memory manager
+    if not chat_history:
+        conv_data = memory_manager.conversations.get(
+            where={"session_id": session}
+        )
+        if conv_data and conv_data["documents"]:
+            # Add conversations from memory manager to conversation history
+            for idx, doc in enumerate(conv_data["documents"]):
+                parts = doc.split("\n")
+                if len(parts) >= 2:
+                    user_msg = parts[0].replace("User: ", "")
+                    assistant_msg = parts[1].replace("Assistant: ", "")
+                    conversation_history.add_message(session, "user", user_msg)
+                    conversation_history.add_message(session, "assistant", assistant_msg)
+            
+            # Get the updated chat history
+            chat_history = conversation_history.get_messages(session)
+    
     return templates.TemplateResponse(
         "chat.html", 
         {
@@ -41,7 +67,15 @@ async def root(request: Request, session: Optional[str] = Cookie(None)) -> HTMLR
     )
 
 @app.get("/profile", response_class=HTMLResponse)
-async def profile_form(request: Request) -> HTMLResponse:
+async def profile_form(
+    request: Request,
+    session: Optional[str] = Cookie(None),
+    response: Response = None
+) -> HTMLResponse:
+    if not session:
+        session = str(uuid.uuid4())
+        response.set_cookie(key="session", value=session)
+    
     profile_data = storage.load_profile()
     return templates.TemplateResponse("profile.html", {
         "request": request,
@@ -50,7 +84,14 @@ async def profile_form(request: Request) -> HTMLResponse:
     })
 
 @app.get("/memories", response_class=HTMLResponse)
-async def view_memories(request: Request) -> HTMLResponse:
+async def view_memories(
+    request: Request,
+    session: Optional[str] = Cookie(None),
+    response: Response = None
+) -> HTMLResponse:
+    if not session:
+        session = str(uuid.uuid4())
+        response.set_cookie(key="session", value=session)
     facts = memory_manager.facts.get()
     conversations = memory_manager.conversations.get()
     
