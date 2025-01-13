@@ -174,7 +174,7 @@
         // Load chat history
         {% if chat_history %}
             {% for msg in chat_history %}
-                addMessage('{{ msg.content | safe }}', '{{ msg.role }}');
+                addMessage({{ msg.content | tojson }}, '{{ msg.role }}');
             {% endfor %}
         {% endif %}
 

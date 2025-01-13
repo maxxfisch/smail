@@ -32,6 +32,12 @@ ENV/
 *.swo
 
 # Project specific
-data/
-*.sqlite3
+data/memory/chroma.sqlite3
+data/memory/chroma.sqlite3-shm
+data/memory/chroma.sqlite3-wal
+data/profile.json
 *.db
+
+# Keep data directories but ignore their contents
+!data/
+!data/memory/
