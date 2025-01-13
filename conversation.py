@@ -35,3 +35,14 @@ class ConversationHistory:
             context.append(f"{role}: {msg['content']}")
         
         return "\n".join(context)
+
+    def get_messages(self, session_id: str) -> List[Dict[str, Any]]:
+        """Get all messages for a session, with proper role mapping for display."""
+        messages = self.get_history(session_id)
+        return [
+            {
+                "role": "user" if msg["role"] == "user" else "bot",
+                "content": msg["content"]
+            }
+            for msg in messages
+        ]
