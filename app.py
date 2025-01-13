@@ -27,8 +27,18 @@ class ChatResponse(BaseModel):
     response: str
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("chat.html", {"request": request, "active_page": "chat"})
+async def root(request: Request, session: Optional[str] = Cookie(None)) -> HTMLResponse:
+    chat_history = []
+    if session:
+        chat_history = conversation_history.get_messages(session)
+    return templates.TemplateResponse(
+        "chat.html", 
+        {
+            "request": request, 
+            "active_page": "chat",
+            "chat_history": chat_history
+        }
+    )
 
 @app.get("/profile", response_class=HTMLResponse)
 async def profile_form(request: Request) -> HTMLResponse:
