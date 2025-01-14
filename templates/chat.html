@@ -109,76 +109,94 @@
     <div class="typing-indicator" id="typing-indicator">AI is thinking...</div>
     <div id="input-container">
         <input type="text" id="message-input" placeholder="Type your message...">
-        <button id="send-button" onclick="sendMessage()">Send</button>
+        <button id="send-button">Send</button>
     </div>
 
     <script>
-        const chatContainer = document.getElementById('chat-container');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        const typingIndicator = document.getElementById('typing-indicator');
+        class ChatManager {
+            constructor() {
+                this.chatContainer = document.getElementById('chat-container');
+                this.messageInput = document.getElementById('message-input');
+                this.sendButton = document.getElementById('send-button');
+                this.typingIndicator = document.getElementById('typing-indicator');
+                this.isProcessing = false;
 
-        messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey && !isProcessing) {
-                e.preventDefault();
-                sendMessage();
+                // Bind event listeners
+                this.messageInput.addEventListener('keypress', this.handleKeyPress.bind(this));
+                this.sendButton.addEventListener('click', this.sendMessage.bind(this));
+
+                // Initialize UI
+                this.messageInput.focus();
+                this.loadChatHistory();
             }
-        });
 
-        let isProcessing = false;
+            handleKeyPress(e) {
+                if (e.key === 'Enter' && !e.shiftKey && !this.isProcessing) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            }
 
-        async function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message || isProcessing) return;
+            loadChatHistory() {
+                {% if chat_history %}
+                    {% for msg in chat_history %}
+                        this.addMessage({{ msg.content | tojson }}, '{{ msg.role }}');
+                    {% endfor %}
+                {% endif %}
+            }
 
-            isProcessing = true;
-            sendButton.disabled = true;
-            messageInput.disabled = true;
-            
-            addMessage(message, 'user');
-            messageInput.value = '';
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message || this.isProcessing) return;
 
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `message=${encodeURIComponent(message)}`
-                });
+                this.isProcessing = true;
+                this.sendButton.disabled = true;
+                this.messageInput.disabled = true;
+                
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
 
-                const data = await response.json();
-                addMessage(data.response, 'bot');
-            } catch (error) {
-                addMessage('Error: Unable to get response', 'error');
-            } finally {
-                isProcessing = false;
-                sendButton.disabled = false;
-                messageInput.disabled = false;
-                messageInput.focus();
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `message=${encodeURIComponent(message)}`
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    this.addMessage(data.response, 'bot');
+                } catch (error) {
+                    console.error('Chat error:', error);
+                    this.addMessage('Error: Unable to get response', 'error');
+                } finally {
+                    this.isProcessing = false;
+                    this.sendButton.disabled = false;
+                    this.messageInput.disabled = false;
+                    this.messageInput.focus();
+                }
+            }
+
+            addMessage(message, type) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}-message`;
+                
+                const textContent = document.createElement('span');
+                textContent.textContent = message;
+                messageDiv.appendChild(textContent);
+                
+                this.chatContainer.appendChild(messageDiv);
+                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
             }
         }
 
-        function addMessage(message, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}-message`;
-            
-            const textContent = document.createElement('span');
-            textContent.textContent = message;
-            messageDiv.appendChild(textContent);
-            
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        // Load chat history
-        {% if chat_history %}
-            {% for msg in chat_history %}
-                addMessage('{{ msg.content | safe }}', '{{ msg.role }}');
-            {% endfor %}
-        {% endif %}
-
-        messageInput.focus();
+        // Initialize chat manager when the page loads
+        const chatManager = new ChatManager();
     </script>
 </body>
 </html>
