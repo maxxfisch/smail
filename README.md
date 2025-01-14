@@ -40,43 +40,55 @@ uvicorn app:app --reload
 ## Architecture
 
 ### System Context (C4 Level 1)
-```mermaid
-graph TB
-    User["End User<br/><sub>Person using web browser</sub>"]
-    SMAIL["SMAIL Application<br/><sub>Web-based chat interface</sub>"]
-    Ollama["Ollama LLM<br/><sub>Local AI service</sub>"]
-    
-    subgraph Local["Local Environment"]
-        SMAIL
-        Ollama
-    end
-    
-    User -->|"Uses web interface<br/>HTTPS"| SMAIL
-    SMAIL -->|"Sends prompts<br/>HTTP/JSON"| Ollama
-    Ollama -->|"Returns responses<br/>HTTP/JSON"| SMAIL
+```plantuml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title System Context diagram for SMAIL
+
+Person(user, "End User", "Person using web browser to interact with the AI assistant")
+
+Boundary(local, "Local Environment") {
+    System(smail, "SMAIL Application", "Web-based chat interface with memory management and profile customization")
+    System_Ext(ollama, "Ollama LLM", "Local language model service running llama2")
+}
+
+Rel(user, smail, "Uses web interface", "HTTPS")
+Rel(smail, ollama, "Sends prompts", "HTTP/JSON")
+Rel_Back(smail, ollama, "Returns responses", "HTTP/JSON")
+@enduml
 ```
 
 ### Container Diagram (C4 Level 2)
-```mermaid
-graph TB
-    User["End User<br/><sub>Person using chat interface</sub>"]
+```plantuml
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container diagram for SMAIL
+
+Person(user, "End User", "Person using the chat interface")
+
+Boundary(local, "Local Environment") {
+    System_Boundary(smail, "SMAIL Application") {
+        Container(web_ui, "Web Interface", "HTML, JavaScript", "Class-based components with persistent state management and real-time chat")
+        Container(web_app, "Backend Service", "Python, FastAPI", "RESTful API handling sessions, business logic, and component coordination")
+        ContainerDb(storage, "Data Storage", "JSON, ChromaDB", "Profile data, conversation history, and vector-based semantic memory")
+    }
     
-    subgraph Local["Local Environment"]
-        subgraph SMAIL["SMAIL Application"]
-            WebUI["Web Interface<br/><sub>HTML + JavaScript<br/>Class-based components</sub>"]
-            Backend["Backend Service<br/><sub>Python + FastAPI<br/>Business logic & sessions</sub>"]
-            Storage["Data Storage<br/><sub>JSON + ChromaDB<br/>Profiles & memories</sub>"]
-        end
-        
-        Ollama["Ollama LLM<br/><sub>Local AI service</sub>"]
-    end
-    
-    User -->|"Interacts with<br/>HTTPS"| WebUI
-    WebUI -->|"Makes API calls<br/>REST API"| Backend
-    Backend -->|"Returns responses<br/>REST API"| WebUI
-    Backend -->|"Persists data<br/>Local FS"| Storage
-    Backend -->|"Sends prompts<br/>HTTP/JSON"| Ollama
-    Ollama -->|"Returns responses<br/>HTTP/JSON"| Backend
+    System_Ext(ollama, "Ollama LLM", "Local AI model service")
+}
+
+Rel(user, web_ui, "Interacts with", "HTTPS")
+Rel(web_ui, web_app, "Makes API calls", "REST API")
+Rel_Back(web_ui, web_app, "Returns responses", "REST API")
+Rel(web_app, storage, "Reads/writes data", "Local FS")
+Rel(web_app, ollama, "Sends prompts", "HTTP/JSON")
+Rel_Back(web_app, ollama, "Returns responses", "HTTP/JSON")
+@enduml
 ```
 
 ### Components
