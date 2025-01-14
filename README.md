@@ -42,41 +42,53 @@ uvicorn app:app --reload
 ### System Context (C4 Level 1)
 ```mermaid
 C4Context
-    title System Context Diagram for SMAIL
+    title SMAIL System Context
     
-    Person(user, "User", "A person who wants to chat with an AI assistant")
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+
+    Person_Ext(user, "End User", "A person seeking to interact with an AI assistant through a web interface")
     
-    System(smail, "SMAIL", "Simple Machine Learning Interface that provides chat, memory, and profile management")
+    System(smail, "SMAIL Application", "A web-based interface that provides intelligent chat, memory management, and personalized interactions through local LLM integration")
     
-    System_Ext(ollama, "Ollama", "Local LLM service running llama2 model")
+    System_Ext(ollama, "Ollama LLM Service", "Local large language model service running llama2, providing AI capabilities without cloud dependencies")
     
-    Rel(user, smail, "Uses", "HTTP")
-    Rel(smail, ollama, "Sends prompts to", "HTTP")
-    Rel(ollama, smail, "Returns responses", "HTTP")
-    Rel(smail, user, "Displays responses to", "HTTP")
+    UpdateRelStyle(user, smail, $textColor="green", $lineColor="green")
+    Rel(user, smail, "Interacts with", "HTTPS (Browser)")
+    
+    UpdateRelStyle(smail, ollama, $textColor="blue", $lineColor="blue")
+    BiRel(smail, ollama, "Sends prompts to and receives responses from", "HTTP/JSON")
 ```
 
 ### Container Diagram (C4 Level 2)
 ```mermaid
 C4Container
-    title Container Diagram for SMAIL
+    title SMAIL Container Diagram
     
-    Person(user, "User", "A person who wants to chat with an AI assistant")
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+
+    Person_Ext(user, "End User", "A person seeking to interact with an AI assistant")
     
-    System_Boundary(smail, "SMAIL") {
-        Container(web_app, "Web Application", "FastAPI + Python", "Handles HTTP requests, manages state and business logic")
-        Container(web_ui, "Web Interface", "HTML + JavaScript", "Provides user interface and chat functionality")
-        ContainerDb(file_store, "File Storage", "JSON + ChromaDB", "Stores profiles, conversations, and vector embeddings")
+    System_Boundary(smail, "SMAIL Application") {
+        Container(web_ui, "Web Interface", "HTML, JavaScript, Class-based Components", "Provides responsive user interface with persistent state management and real-time chat functionality")
+        
+        Container(web_app, "Backend API", "Python, FastAPI", "Handles HTTP requests, manages business logic, session handling, and coordinates between components")
+        
+        ContainerDb(storage, "Storage Layer", "JSON Files, ChromaDB Vector Store", "Manages persistent storage of profiles, conversations, and semantic memory with vector embeddings")
     }
     
-    System_Ext(ollama, "Ollama", "Local LLM service")
+    System_Ext(ollama, "Ollama LLM", "Local LLM service providing AI capabilities")
     
-    Rel(user, web_ui, "Interacts with", "HTTPS")
-    Rel(web_ui, web_app, "Makes API calls to", "HTTP")
-    Rel(web_app, file_store, "Reads from and writes to")
-    Rel(web_app, ollama, "Sends prompts to", "HTTP")
-    Rel(ollama, web_app, "Returns responses", "HTTP")
-    Rel(web_app, web_ui, "Sends data to", "HTTP/WebSocket")
+    UpdateRelStyle(user, web_ui, $textColor="green", $lineColor="green")
+    Rel(user, web_ui, "Uses", "HTTPS")
+    
+    UpdateRelStyle(web_ui, web_app, $textColor="blue", $lineColor="blue")
+    BiRel(web_ui, web_app, "Exchanges data via", "HTTP/JSON")
+    
+    UpdateRelStyle(web_app, storage, $textColor="red", $lineColor="red")
+    Rel(web_app, storage, "Reads from and writes to", "Local File System")
+    
+    UpdateRelStyle(web_app, ollama, $textColor="purple", $lineColor="purple")
+    BiRel(web_app, ollama, "Exchanges prompts and responses", "HTTP/JSON")
 ```
 
 ### Components
