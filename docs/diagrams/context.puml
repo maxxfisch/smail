@@ -1,0 +1,18 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title System Context diagram for SMAIL
+
+Person(user, "End User", "Person using web browser to interact with the AI assistant")
+
+Boundary(local, "Local Environment") {
+    System(smail, "SMAIL Application", "Web-based chat interface with memory management and profile customization")
+    System_Ext(ollama, "Ollama LLM", "Local language model service running llama2")
+}
+
+Rel(user, smail, "Uses web interface", "HTTPS")
+Rel(smail, ollama, "Sends prompts", "HTTP/JSON")
+Rel_Back(smail, ollama, "Returns responses", "HTTP/JSON")
+@enduml

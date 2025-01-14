@@ -1,0 +1,26 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container diagram for SMAIL
+
+Person(user, "End User", "Person using the chat interface")
+
+Boundary(local, "Local Environment") {
+    System_Boundary(smail, "SMAIL Application") {
+        Container(web_ui, "Web Interface", "HTML, JavaScript", "Class-based components with persistent state management and real-time chat")
+        Container(web_app, "Backend Service", "Python, FastAPI", "RESTful API handling sessions, business logic, and component coordination")
+        ContainerDb(storage, "Data Storage", "JSON, ChromaDB", "Profile data, conversation history, and vector-based semantic memory")
+    }
+    
+    System_Ext(ollama, "Ollama LLM", "Local AI model service")
+}
+
+Rel(user, web_ui, "Interacts with", "HTTPS")
+Rel(web_ui, web_app, "Makes API calls", "REST API")
+Rel_Back(web_ui, web_app, "Returns responses", "REST API")
+Rel(web_app, storage, "Reads/writes data", "Local FS")
+Rel(web_app, ollama, "Sends prompts", "HTTP/JSON")
+Rel_Back(web_app, ollama, "Returns responses", "HTTP/JSON")
+@enduml
