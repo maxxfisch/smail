@@ -43,56 +43,42 @@ uvicorn app:app --reload
 ```mermaid
 C4Context
     title SMAIL System Context - High Level View
-    
-    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 
-    Person_Ext(user, "End User", "Person interacting with the AI assistant through their web browser")
+    Person(user, "End User", "Person interacting with the AI assistant through their web browser")
     
-    Enterprise_Boundary(local, "Local Environment") {
+    Boundary(local, "Local Environment") {
         System(smail, "SMAIL Application", "Web-based chat interface with memory management and profile customization")
-        
         System_Ext(ollama, "Ollama LLM", "Local language model service (llama2)")
     }
     
-    UpdateRelStyle(user, smail, $textColor="green", $lineColor="green", $lineStyle="bold")
-    Rel_R(user, smail, "Uses web interface", "HTTPS")
-    
-    UpdateRelStyle(smail, ollama, $textColor="blue", $lineColor="blue", $lineStyle="bold")
-    BiRel_D(smail, ollama, "Exchanges prompts/responses", "HTTP/JSON")
+    Rel(user, smail, "Uses web interface", "HTTPS")
+    Rel(smail, ollama, "Sends prompts", "HTTP/JSON")
+    Rel(ollama, smail, "Returns responses", "HTTP/JSON")
 ```
 
 ### Container Diagram (C4 Level 2)
 ```mermaid
 C4Container
     title SMAIL Container Architecture - Detailed View
-    
-    UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 
-    Person_Ext(user, "End User", "Person using the chat interface")
+    Person(user, "End User", "Person using the chat interface")
     
-    Enterprise_Boundary(local, "Local Environment") {
-        System_Boundary(smail, "SMAIL Application") {
+    Boundary(local, "Local Environment") {
+        Boundary(smail, "SMAIL Application") {
             Container(web_ui, "Web Interface", "HTML + JavaScript", "Class-based components with persistent state management and real-time chat")
-            
             Container(web_app, "Backend Service", "Python + FastAPI", "RESTful API handling sessions, business logic, and component coordination")
-            
             ContainerDb(storage, "Data Storage", "JSON + ChromaDB", "Profile data, conversation history, and vector-based semantic memory")
         }
         
         System_Ext(ollama, "Ollama LLM", "Local AI model service")
     }
     
-    UpdateRelStyle(user, web_ui, $textColor="green", $lineColor="green", $lineStyle="bold")
-    Rel_R(user, web_ui, "Interacts with", "HTTPS")
-    
-    UpdateRelStyle(web_ui, web_app, $textColor="blue", $lineColor="blue", $lineStyle="bold")
-    BiRel_D(web_ui, web_app, "Exchanges data", "REST API")
-    
-    UpdateRelStyle(web_app, storage, $textColor="red", $lineColor="red", $lineStyle="bold")
-    Rel_L(web_app, storage, "Persists data", "Local FS")
-    
-    UpdateRelStyle(web_app, ollama, $textColor="purple", $lineColor="purple", $lineStyle="bold")
-    BiRel_R(web_app, ollama, "AI interaction", "HTTP/JSON")
+    Rel(user, web_ui, "Interacts with", "HTTPS")
+    Rel(web_ui, web_app, "Makes API calls", "REST API")
+    Rel(web_app, web_ui, "Returns responses", "REST API")
+    Rel(web_app, storage, "Persists data", "Local FS")
+    Rel(web_app, ollama, "Sends prompts", "HTTP/JSON")
+    Rel(ollama, web_app, "Returns responses", "HTTP/JSON")
 ```
 
 ### Components
