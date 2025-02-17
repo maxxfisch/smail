@@ -3,14 +3,16 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from sse_starlette.sse import EventSourceResponse
 import requests
 import json
 from datetime import datetime
 from storage import Storage
 from conversation import ConversationHistory
 from memory_manager import MemoryManager
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, AsyncGenerator
 import uuid
+import asyncio
 
 app = FastAPI()
 
@@ -184,3 +186,102 @@ Remember:
         return {"response": "Error: Unable to get response from LLM"}
     except Exception as e:
         return {"response": f"Error: {str(e)}"}
+
+@app.get("/stream-chat")
+async def stream_chat(
+    message: str,
+    session: Optional[str] = Cookie(None),
+    response_obj: Response = None
+) -> EventSourceResponse:
+    try:
+        if not session:
+            session = str(uuid.uuid4())
+            response_obj.set_cookie(key="session", value=session)
+        
+        profile_context = storage.get_context_for_prompt()
+        conv_context = conversation_history.get_context_string(session)
+        memory_context = memory_manager.get_context_for_prompt(message)
+        
+        full_prompt = f"""You are my personal AI assistant. Focus on responding directly to the current message while keeping relevant context in mind. Be concise and natural in your responses.
+
+Recent Context:
+{conv_context}
+
+Relevant Background:
+{memory_context}
+
+Profile Info:
+{profile_context}
+
+Current message: {message}
+
+Remember:
+- Respond directly to the current message
+- Only reference previous context if directly relevant
+- Keep responses concise and natural
+- Don't list out everything you know about me
+- If you learn new information, update your understanding without mentioning it"""
+
+        conversation_history.add_message(session, "user", message)
+
+        async def event_generator() -> AsyncGenerator[Dict, None]:
+            full_response = ""
+            try:
+                llm_response = requests.post(
+                    OLLAMA_URL,
+                    json={
+                        "model": MODEL_NAME,
+                        "prompt": full_prompt
+                    },
+                    stream=True
+                )
+                
+                if llm_response.status_code == 200:
+                    for line in llm_response.iter_lines():
+                        if line:
+                            try:
+                                resp_obj = json.loads(line.decode('utf-8'))
+                                if resp_obj.get('response'):
+                                    chunk = resp_obj['response']
+                                    full_response += chunk
+                                    yield {
+                                        "event": "message",
+                                        "data": json.dumps({
+                                            "content": chunk,
+                                            "type": "token"
+                                        })
+                                    }
+                                    await asyncio.sleep(0.01)  # Small delay for smooth streaming
+                            except json.JSONDecodeError:
+                                continue
+                    
+                    # Save the complete response
+                    if full_response:
+                        conversation_history.add_message(session, "assistant", full_response)
+                        memory_manager.add_conversation(session, message, full_response)
+                        
+                        facts = memory_manager.extract_facts_from_conversation(message, full_response)
+                        for fact in facts:
+                            memory_manager.add_fact(fact)
+                        
+                        yield {
+                            "event": "done",
+                            "data": json.dumps({"status": "complete"})
+                        }
+                else:
+                    yield {
+                        "event": "error",
+                        "data": json.dumps({"error": "Unable to get response from LLM"})
+                    }
+            except Exception as e:
+                yield {
+                    "event": "error",
+                    "data": json.dumps({"error": str(e)})
+                }
+        
+        return EventSourceResponse(event_generator())
+    except Exception as e:
+        return EventSourceResponse([{
+            "event": "error",
+            "data": json.dumps({"error": str(e)})
+        }])

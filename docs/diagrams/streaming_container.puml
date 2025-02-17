@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container diagram for Response Streaming
+
+Person(user, "End User", "A user interacting with the chat interface")
+
+System_Boundary(smail, "SMAIL Chat System") {
+    Container(web_ui, "Web Interface", "HTML, JavaScript", "Provides streaming chat UI with status updates and controls")
+    
+    Container(stream_manager, "Stream Manager", "JavaScript Class", "Handles SSE connection and message buffering")
+    
+    Container(ui_state, "UI State Manager", "JavaScript Class", "Manages UI states and animations")
+    
+    Container(backend_api, "Backend API", "FastAPI", "Provides streaming endpoints and handles LLM communication")
+    
+    Container(error_handler, "Error Handler", "Python/JavaScript", "Manages error recovery and retries")
+    
+    ContainerDb(session_store, "Session Store", "JSON", "Stores conversation history and state")
+}
+
+System_Ext(ollama, "Ollama LLM", "Provides streaming response generation")
+
+Rel(user, web_ui, "Interacts with", "HTTPS")
+Rel(web_ui, stream_manager, "Initiates streaming", "JavaScript")
+Rel(stream_manager, ui_state, "Updates UI state", "JavaScript")
+Rel(stream_manager, backend_api, "Connects to", "SSE")
+Rel(backend_api, ollama, "Streams prompts", "HTTP")
+Rel_Back(ollama, backend_api, "Returns chunks", "HTTP")
+Rel(backend_api, session_store, "Stores/retrieves", "JSON")
+Rel(error_handler, stream_manager, "Manages retries", "JavaScript")
+Rel(error_handler, backend_api, "Handles errors", "HTTP")
+
+@enduml 

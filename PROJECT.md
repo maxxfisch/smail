@@ -7,26 +7,52 @@ SMAIL is a chat application that uses the llama3.2 language model through Ollama
 
 ### Core Features
 - FastAPI-based web application
-- Chat interface with streaming responses
+- Advanced chat interface with streaming responses
 - Profile management system
-- Memory management for conversation context
+- Sophisticated memory management for conversation context
 - Chat persistence across sessions
 - Uses llama3.2:latest model (2.0 GB) via Ollama
+- Real-time response streaming with UI feedback
+- Code and markdown formatting with syntax highlighting
+- Comprehensive error handling and recovery
+- Performance optimizations for long conversations
 
 ### Technical Details
 - Model: llama3.2:latest
 - Backend: FastAPI + Python
-- Frontend: HTML + JavaScript
-- Storage: File-based (JSON)
+- Frontend: HTML + JavaScript (Class-based architecture)
+- Storage: ChromaDB for memory, JSON for session data
 - Session management: Cookie-based
+- UI Libraries: Prism.js for syntax highlighting, Marked.js for markdown
 
-### Recent Fixes
-- Implemented class-based state management in chat interface
-- Fixed chat persistence between page navigations
-- Added proper error handling and logging
-- Improved content escaping with tojson filter
-- Added comprehensive test coverage
-- Added proper .gitignore configuration
+### Recent Improvements
+1. UI Enhancement & Controls
+   - Status message rotation during processing
+   - Enhanced typing indicators
+   - Response controls (Cancel, Copy)
+   - Progress tracking
+   - Word count display
+   - Feedback messages
+   - Improved error state handling
+
+2. Code/Link Highlighting
+   - Syntax highlighting for multiple languages
+   - Markdown formatting support
+   - Automatic language detection
+   - Clickable links with proper styling
+
+3. Error Recovery
+   - Automatic reconnection with exponential backoff
+   - Clear error feedback
+   - Retry functionality
+   - Connection state management
+
+4. Performance Optimization
+   - Message caching system
+   - Efficient DOM updates
+   - Scroll performance improvements
+   - Automatic cleanup of old messages
+   - Memory management for long sessions
 
 ### Known Issues
 - None currently tracked
@@ -39,6 +65,8 @@ SMAIL is a chat application that uses the llama3.2 language model through Ollama
   - Conversation history
   - Session handling
   - Chat functionality
+  - Error recovery
+  - Message formatting
 
 ## Project Structure
 ```
@@ -65,86 +93,47 @@ smail/
    - Current model: llama3.2:latest
 
 3. Code Organization:
-   - Keep business logic in appropriate modules (conversation.py, memory_manager.py, storage.py)
+   - Keep business logic in appropriate modules
    - Use templates for all HTML content
    - Maintain clear separation of concerns
+   - Follow class-based architecture for frontend
 
 ## Future Plans
 
 ### Planned Features
-1. Response Streaming Improvements
-   - Implement proper streaming UI feedback
-   - Add typing indicators
-
-2. Memory Management
-   - Improve fact extraction
+1. Memory Management
+   - Improve fact extraction accuracy
    - Add memory cleanup utilities
-   - Implement memory search
+   - Implement advanced memory search
+   - Add memory visualization
 
-3. User Experience
+2. User Experience
    - Add conversation export
-   - Improve error handling and user feedback
    - Add conversation tagging/categorization
+   - Implement theme customization
+   - Add keyboard shortcuts
 
-4. Profile Improvements
-   - Add profile preview showing how the LLM interprets user information
-   - Visualize which profile aspects influence responses
+3. Profile Improvements
+   - Add profile preview
+   - Visualize profile influence on responses
    - Add profile completeness indicators
 
 ### Technical Improvements
 1. Testing
-   - Add unit tests
-   - Add integration tests
+   - Add end-to-end tests
    - Implement CI/CD
+   - Add performance benchmarks
 
 2. Documentation
    - Add API documentation
-   - Improve code comments
    - Add setup instructions
+   - Create user guide
 
 3. Performance
+   - Implement server-side caching
    - Optimize memory usage
-   - Add caching where appropriate
-   - Improve response times
+   - Add response compression
 
 ## Common Issues and Solutions
 1. Response Handling
-   ```python
-   # Correct way to handle responses
-   llm_response = requests.post(
-       OLLAMA_URL,
-       json={"model": MODEL_NAME, "prompt": prompt},
-       stream=True
-   )
    ```
-
-2. FastAPI Response Objects
-   ```python
-   # Correct parameter naming
-   async def endpoint(response_obj: Response):
-       response_obj.set_cookie(...)
-   ```
-
-3. Model Usage
-   ```python
-   # Use constants for model configuration
-   MODEL_NAME = "llama3.2:latest"
-   ```
-
-## Contributing
-1. Create feature branches for new work
-2. Maintain consistent code style
-3. Test changes thoroughly
-4. Document new features or changes
-5. Create detailed pull requests
-
-## Deployment
-Currently running locally with:
-```bash
-uvicorn app:app --reload
-```
-
-Requirements:
-- Python 3.x
-- Ollama with llama3.2:latest model
-- FastAPI and dependencies from requirements.txt

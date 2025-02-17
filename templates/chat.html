@@ -4,6 +4,8 @@
     <title>SMAIL Chat Interface</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="alternate icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,6 +45,32 @@
             background-color: #ffebee;
             color: #c62828;
             margin-right: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .error-message .retry-button {
+            padding: 4px 8px;
+            background-color: #c62828;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .error-message .retry-button:hover {
+            background-color: #b71c1c;
+        }
+        .reconnecting {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        .reconnecting .attempt {
+            color: #c62828;
+            font-weight: bold;
         }
         #input-container {
             display: flex;
@@ -99,6 +127,117 @@
             margin-right: auto;
             color: #666;
             display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .status-message {
+            display: inline-block;
+            margin-left: 8px;
+            font-style: italic;
+        }
+        .word-count {
+            font-size: 12px;
+            color: #666;
+            margin-left: 8px;
+        }
+        .feedback-message {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background-color: #323232;
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease-in-out;
+        }
+        .feedback-message.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .controls.visible {
+            opacity: 1;
+        }
+        .control-button {
+            padding: 4px 8px;
+            font-size: 12px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #666;
+        }
+        .control-button:hover {
+            background-color: #e0e0e0;
+        }
+        .control-button.cancel {
+            color: #c62828;
+            border-color: #ffcdd2;
+        }
+        .control-button.copy {
+            color: #1565c0;
+            border-color: #bbdefb;
+        }
+        .progress-bar {
+            height: 2px;
+            background-color: #e0e0e0;
+            border-radius: 1px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            background-color: #2196f3;
+            width: 0;
+            transition: width 0.3s ease-in-out;
+        }
+        .message pre {
+            margin: 8px 0;
+            padding: 12px;
+            background-color: #1e1e1e;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .message code {
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+        }
+        .message a {
+            color: #2196f3;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .message a:hover {
+            border-bottom-color: #2196f3;
+        }
+        .message p {
+            margin: 8px 0;
+        }
+        .message ul, .message ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+        .message li {
+            margin: 4px 0;
+        }
+        .message blockquote {
+            margin: 8px 0;
+            padding-left: 12px;
+            border-left: 4px solid #e0e0e0;
+            color: #666;
         }
     </style>
 </head>
@@ -106,28 +245,278 @@
     <h1>SMAIL Chat Interface</h1>
     {% include "nav.html" %}
     <div id="chat-container"></div>
-    <div class="typing-indicator" id="typing-indicator">AI is thinking...</div>
+    <div class="typing-indicator" id="typing-indicator">
+        <div class="loading"></div>
+        <span class="status-message">AI is thinking...</span>
+        <span class="word-count"></span>
+        <div class="controls">
+            <button class="control-button cancel" id="cancel-button">Cancel</button>
+            <button class="control-button copy" id="copy-button">Copy</button>
+        </div>
+        <div class="progress-bar">
+            <div class="fill"></div>
+        </div>
+    </div>
     <div id="input-container">
         <input type="text" id="message-input" placeholder="Type your message...">
         <button id="send-button">Send</button>
     </div>
+    <div class="feedback-message" id="feedback-message"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <script>
+        const STATUS_MESSAGES = [
+            "🤔 Pondering the mysteries of your question...",
+            "🧠 Neural networks firing...",
+            "💭 Deep in thought...",
+            "📚 Flipping through my digital library...",
+            "🔍 Searching the knowledge base...",
+            "🎯 Getting to the heart of the matter...",
+            "✍️ Crafting the perfect response...",
+            "🎨 Painting with words...",
+            "📝 Getting my thoughts together..."
+        ];
+
+        // Configure marked options
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (Prism.languages[lang]) {
+                    return Prism.highlight(code, Prism.languages[lang], lang);
+                }
+                return code;
+            }
+        });
+
+        class MessageFormatter {
+            static format(content) {
+                // Convert markdown to HTML
+                const html = marked.parse(content);
+                
+                // Create a temporary div to hold the HTML
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                
+                // Process links
+                div.querySelectorAll('a').forEach(link => {
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                });
+                
+                return div.innerHTML;
+            }
+
+            static detectLanguage(code) {
+                // Simple language detection based on common patterns
+                if (code.includes('def ') || code.includes('import ')) return 'python';
+                if (code.includes('function') || code.includes('const ')) return 'javascript';
+                if (code.includes('<?php')) return 'php';
+                if (code.includes('{') && code.includes('}')) return 'json';
+                return 'plaintext';
+            }
+        }
+
+        class RetryManager {
+            constructor(maxAttempts = 5, baseDelay = 1000) {
+                this.maxAttempts = maxAttempts;
+                this.baseDelay = baseDelay;
+                this.attempts = 0;
+                this.isRetrying = false;
+            }
+
+            async retry(operation) {
+                this.attempts = 0;
+                this.isRetrying = false;
+
+                while (this.attempts < this.maxAttempts) {
+                    try {
+                        this.isRetrying = this.attempts > 0;
+                        return await operation();
+                    } catch (error) {
+                        this.attempts++;
+                        if (this.attempts >= this.maxAttempts) {
+                            throw new Error(`Failed after ${this.maxAttempts} attempts: ${error.message}`);
+                        }
+                        const delay = this.calculateDelay();
+                        await this.wait(delay);
+                    }
+                }
+            }
+
+            calculateDelay() {
+                return this.baseDelay * Math.pow(2, this.attempts - 1);
+            }
+
+            async wait(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            get currentAttempt() {
+                return this.attempts + 1;
+            }
+        }
+
+        /* StreamManager class handles SSE connections and message updates */
+        class StreamManager {
+            constructor(chatManager) {
+                this.chatManager = chatManager;
+                this.eventSource = null;
+                this.currentMessageDiv = null;
+                this.currentMessageContent = '';
+                this.statusRotationInterval = null;
+                this.statusIndex = 0;
+                this.retryManager = new RetryManager();
+            }
+
+            async startStream(message) {
+                try {
+                    await this.retryManager.retry(() => this.initializeStream(message));
+                } catch (error) {
+                    this.cleanup();
+                    this.chatManager.onStreamError(error.message);
+                }
+            }
+
+            async initializeStream(message) {
+                if (this.eventSource) {
+                    this.eventSource.close();
+                }
+
+                this.currentMessageContent = '';
+                this.currentMessageDiv = this.chatManager.createMessageDiv('bot');
+                this.startStatusRotation();
+                
+                this.eventSource = new EventSource(`/stream-chat?message=${encodeURIComponent(message)}`);
+                
+                this.eventSource.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.content) {
+                        this.currentMessageContent += data.content;
+                        this.updateMessageContent(this.currentMessageContent);
+                        this.chatManager.updateProgress(this.currentMessageContent.length);
+                    }
+                };
+
+                this.eventSource.addEventListener('done', (event) => {
+                    this.cleanup();
+                    this.chatManager.onStreamComplete();
+                });
+
+                this.eventSource.addEventListener('error', (event) => {
+                    const data = event.data ? JSON.parse(event.data) : { error: 'Connection lost' };
+                    this.cleanup();
+                    this.chatManager.onStreamError(data.error);
+                });
+
+                this.eventSource.onerror = (error) => {
+                    this.cleanup();
+                    this.chatManager.onStreamError('Connection error');
+                };
+            }
+
+            startStatusRotation() {
+                this.statusIndex = 0;
+                this.updateStatusMessage();
+                this.statusRotationInterval = setInterval(() => {
+                    this.statusIndex = (this.statusIndex + 1) % STATUS_MESSAGES.length;
+                    this.updateStatusMessage();
+                }, 3000);
+            }
+
+            updateStatusMessage() {
+                const statusElement = this.chatManager.typingIndicator.querySelector('.status-message');
+                if (statusElement) {
+                    if (this.retryManager.isRetrying) {
+                        statusElement.innerHTML = `
+                            <div class="reconnecting">
+                                <div class="loading"></div>
+                                Reconnecting... Attempt <span class="attempt">${this.retryManager.currentAttempt}/${this.retryManager.maxAttempts}</span>
+                            </div>
+                        `;
+                    } else {
+                        statusElement.textContent = STATUS_MESSAGES[this.statusIndex];
+                    }
+                }
+            }
+
+            updateMessageContent(content) {
+                if (this.currentMessageDiv) {
+                    const textContent = this.currentMessageDiv.querySelector('span');
+                    if (textContent) {
+                        textContent.innerHTML = MessageFormatter.format(content);
+                        this.chatManager.scrollToBottom();
+                        this.chatManager.updateWordCount(content);
+                    }
+                }
+            }
+
+            cleanup() {
+                if (this.eventSource) {
+                    this.eventSource.close();
+                    this.eventSource = null;
+                }
+                if (this.statusRotationInterval) {
+                    clearInterval(this.statusRotationInterval);
+                    this.statusRotationInterval = null;
+                }
+            }
+        }
+
+        /* ChatManager class handles the main chat interface */
         class ChatManager {
             constructor() {
                 this.chatContainer = document.getElementById('chat-container');
                 this.messageInput = document.getElementById('message-input');
                 this.sendButton = document.getElementById('send-button');
                 this.typingIndicator = document.getElementById('typing-indicator');
+                this.cancelButton = document.getElementById('cancel-button');
+                this.copyButton = document.getElementById('copy-button');
+                this.progressBar = this.typingIndicator.querySelector('.progress-bar .fill');
+                this.controls = this.typingIndicator.querySelector('.controls');
+                this.wordCount = this.typingIndicator.querySelector('.word-count');
+                this.feedbackMessage = document.getElementById('feedback-message');
                 this.isProcessing = false;
+                this.streamManager = new StreamManager(this);
+                
+                // Performance optimizations
+                this.messageCache = new Map();
+                this.pendingUpdates = new Set();
+                this.updateThrottleTimeout = null;
+                this.scrollThrottleTimeout = null;
+                this.lastScrollPosition = 0;
+                this.isScrolledToBottom = true;
 
-                // Bind event listeners
+                /* Bind event listeners */
                 this.messageInput.addEventListener('keypress', this.handleKeyPress.bind(this));
                 this.sendButton.addEventListener('click', this.sendMessage.bind(this));
+                this.cancelButton.addEventListener('click', this.cancelResponse.bind(this));
+                this.copyButton.addEventListener('click', this.copyResponse.bind(this));
+                this.chatContainer.addEventListener('scroll', this.handleScroll.bind(this));
 
-                // Initialize UI
+                /* Initialize UI */
                 this.messageInput.focus();
                 this.loadChatHistory();
+
+                // Start periodic cleanup
+                setInterval(this.cleanup.bind(this), 5 * 60 * 1000);
+            }
+
+            handleScroll() {
+                if (this.scrollThrottleTimeout) return;
+                
+                this.scrollThrottleTimeout = setTimeout(() => {
+                    const currentScroll = this.chatContainer.scrollTop;
+                    const maxScroll = this.chatContainer.scrollHeight - this.chatContainer.clientHeight;
+                    
+                    this.isScrolledToBottom = Math.abs(maxScroll - currentScroll) < 10;
+                    this.lastScrollPosition = currentScroll;
+                    
+                    this.scrollThrottleTimeout = null;
+                }, 100);
             }
 
             handleKeyPress(e) {
@@ -152,50 +541,207 @@
                 this.isProcessing = true;
                 this.sendButton.disabled = true;
                 this.messageInput.disabled = true;
+                this.typingIndicator.style.display = 'block';
+                this.controls.classList.add('visible');
+                this.progressBar.style.width = '0%';
                 
                 this.addMessage(message, 'user');
                 this.messageInput.value = '';
 
                 try {
-                    const response = await fetch('/chat', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `message=${encodeURIComponent(message)}`
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    this.addMessage(data.response, 'bot');
+                    await this.streamManager.startStream(message);
                 } catch (error) {
                     console.error('Chat error:', error);
                     this.addMessage('Error: Unable to get response', 'error');
-                } finally {
-                    this.isProcessing = false;
-                    this.sendButton.disabled = false;
-                    this.messageInput.disabled = false;
-                    this.messageInput.focus();
+                    this.onStreamComplete();
                 }
             }
 
-            addMessage(message, type) {
+            createMessageDiv(type) {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${type}-message`;
                 
                 const textContent = document.createElement('span');
-                textContent.textContent = message;
                 messageDiv.appendChild(textContent);
                 
+                if (type === 'error') {
+                    const retryButton = document.createElement('button');
+                    retryButton.className = 'retry-button';
+                    retryButton.textContent = 'Retry';
+                    retryButton.onclick = () => this.retryLastMessage();
+                    messageDiv.appendChild(retryButton);
+                }
+                
                 this.chatContainer.appendChild(messageDiv);
-                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+                this.scrollToBottom();
+                
+                return messageDiv;
+            }
+
+            addMessage(message, type) {
+                const messageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const messageData = { id: messageId, content: message, type };
+                
+                this.messageCache.set(messageId, messageData);
+                this.renderMessage(messageData);
+                
+                // Clean up old messages if we have too many
+                if (this.messageCache.size > 100) {
+                    const oldestId = Array.from(this.messageCache.keys())[0];
+                    this.messageCache.delete(oldestId);
+                    const oldestElement = document.getElementById(oldestId);
+                    if (oldestElement) oldestElement.remove();
+                }
+            }
+
+            renderMessage(messageData) {
+                const messageDiv = document.createElement('div');
+                messageDiv.id = messageData.id;
+                messageDiv.className = `message ${messageData.type}-message`;
+                
+                const textContent = document.createElement('span');
+                textContent.innerHTML = messageData.type === 'user' ? 
+                    messageData.content : 
+                    MessageFormatter.format(messageData.content);
+                messageDiv.appendChild(textContent);
+                
+                if (messageData.type === 'error') {
+                    const retryButton = document.createElement('button');
+                    retryButton.className = 'retry-button';
+                    retryButton.textContent = 'Retry';
+                    retryButton.onclick = () => this.retryLastMessage();
+                    messageDiv.appendChild(retryButton);
+                }
+                
+                this.chatContainer.appendChild(messageDiv);
+                
+                if (this.isScrolledToBottom) {
+                    this.scrollToBottom();
+                }
+            }
+
+            scrollToBottom() {
+                requestAnimationFrame(() => {
+                    this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+                });
+            }
+
+            cancelResponse() {
+                if (this.streamManager) {
+                    this.streamManager.cleanup();
+                }
+                this.onStreamComplete();
+                this.showFeedback('Response cancelled');
+            }
+
+            async copyResponse() {
+                if (this.streamManager && this.streamManager.currentMessageContent) {
+                    try {
+                        await navigator.clipboard.writeText(this.streamManager.currentMessageContent);
+                        this.showFeedback('Response copied to clipboard');
+                    } catch (err) {
+                        console.error('Failed to copy:', err);
+                        this.showFeedback('Failed to copy response');
+                    }
+                }
+            }
+
+            showFeedback(message) {
+                this.feedbackMessage.textContent = message;
+                this.feedbackMessage.classList.add('visible');
+                setTimeout(() => {
+                    this.feedbackMessage.classList.remove('visible');
+                }, 2000);
+            }
+
+            updateWordCount(content) {
+                const wordCount = content.trim().split(/\s+/).length;
+                this.wordCount.textContent = `${wordCount} words`;
+            }
+
+            updateProgress(length) {
+                // Simple progress based on response length
+                const progress = Math.min(100, (length / 500) * 100);
+                this.progressBar.style.width = `${progress}%`;
+            }
+
+            onStreamComplete() {
+                this.isProcessing = false;
+                this.sendButton.disabled = false;
+                this.messageInput.disabled = false;
+                this.typingIndicator.style.display = 'none';
+                this.controls.classList.remove('visible');
+                this.progressBar.style.width = '0%';
+                this.messageInput.focus();
+            }
+
+            onStreamError(error) {
+                const errorMessage = this.streamManager.retryManager.isRetrying
+                    ? `Error: ${error} (Attempt ${this.streamManager.retryManager.currentAttempt}/${this.streamManager.retryManager.maxAttempts})`
+                    : `Error: ${error}`;
+                
+                this.addMessage(errorMessage, 'error');
+                this.onStreamComplete();
+            }
+
+            retryLastMessage() {
+                const lastUserMessage = Array.from(this.chatContainer.querySelectorAll('.user-message'))
+                    .pop()?.querySelector('span')?.textContent;
+                
+                if (lastUserMessage) {
+                    this.messageInput.value = lastUserMessage;
+                    this.sendMessage();
+                }
+            }
+
+            updateMessageContent(messageId, content) {
+                const messageData = this.messageCache.get(messageId);
+                if (messageData) {
+                    messageData.content = content;
+                    this.pendingUpdates.add(messageId);
+                    this.scheduleUpdate();
+                }
+            }
+
+            scheduleUpdate() {
+                if (this.updateThrottleTimeout) return;
+                
+                this.updateThrottleTimeout = requestAnimationFrame(() => {
+                    this.flushUpdates();
+                    this.updateThrottleTimeout = null;
+                });
+            }
+
+            flushUpdates() {
+                for (const messageId of this.pendingUpdates) {
+                    const messageData = this.messageCache.get(messageId);
+                    if (messageData) {
+                        const messageElement = document.getElementById(messageId);
+                        if (messageElement) {
+                            const textContent = messageElement.querySelector('span');
+                            if (textContent) {
+                                textContent.innerHTML = MessageFormatter.format(messageData.content);
+                            }
+                        }
+                    }
+                }
+                this.pendingUpdates.clear();
+            }
+
+            cleanup() {
+                // Remove messages older than 1 hour from cache and DOM
+                const oneHourAgo = Date.now() - (60 * 60 * 1000);
+                for (const [id, data] of this.messageCache) {
+                    if (parseInt(id.split('-')[1]) < oneHourAgo) {
+                        this.messageCache.delete(id);
+                        const element = document.getElementById(id);
+                        if (element) element.remove();
+                    }
+                }
             }
         }
 
-        // Initialize chat manager when the page loads
+        /* Initialize chat manager when the page loads */
         const chatManager = new ChatManager();
     </script>
 </body>
