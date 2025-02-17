@@ -86,6 +86,11 @@ smail/
    - Improve error handling and user feedback
    - Add conversation tagging/categorization
 
+4. Profile Improvements
+   - Add profile preview showing how the LLM interprets user information
+   - Visualize which profile aspects influence responses
+   - Add profile completeness indicators
+
 ### Technical Improvements
 1. Testing
    - Add unit tests
