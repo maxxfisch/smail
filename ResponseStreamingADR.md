@@ -11,7 +11,7 @@ Implement Server-Sent Events (SSE) based streaming with a layered architecture t
 
 ## System Context (C4 Level 1)
 
-![System Context Diagram](images/streaming_context.png)
+![System Context Diagram](docs/diagrams/context.png)
 
 <details>
 <summary>PlantUML Source</summary>
@@ -37,7 +37,7 @@ Rel_Back(smail, user, "Provides real-time feedback and responses", "SSE")
 
 ## Container (C4 Level 2)
 
-![Container Diagram](images/streaming_container.png)
+![Container Diagram](docs/diagrams/container.png)
 
 <details>
 <summary>PlantUML Source</summary>
