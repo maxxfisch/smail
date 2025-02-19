@@ -1,7 +1,7 @@
 # SMAIL Project Documentation
 
 ## Overview
-SMAIL is a chat application that uses the llama3.2 language model through Ollama to provide intelligent responses. The application includes features like chat persistence, memory management, and user profiles.
+SMAIL is a chat application that uses the deepseek-r1:7b language model through Ollama to provide intelligent responses. The application includes features like chat persistence, memory management, and user profiles.
 
 ## Current Status
 
@@ -11,14 +11,14 @@ SMAIL is a chat application that uses the llama3.2 language model through Ollama
 - Profile management system
 - Sophisticated memory management for conversation context
 - Chat persistence across sessions
-- Uses llama3.2:latest model (2.0 GB) via Ollama
+- Uses deepseek-r1:7b model (7.0 GB) via Ollama
 - Real-time response streaming with UI feedback
 - Code and markdown formatting with syntax highlighting
 - Comprehensive error handling and recovery
 - Performance optimizations for long conversations
 
 ### Technical Details
-- Model: llama3.2:latest
+- Model: deepseek-r1:7b
 - Backend: FastAPI + Python
 - Frontend: HTML + JavaScript (Class-based architecture)
 - Storage: ChromaDB for memory, JSON for session data
@@ -90,7 +90,7 @@ smail/
 
 2. Model Configuration:
    - Use the `MODEL_NAME` constant for model references
-   - Current model: llama3.2:latest
+   - Current model: deepseek-r1:7b
 
 3. Code Organization:
    - Keep business logic in appropriate modules
@@ -117,6 +117,133 @@ smail/
    - Add profile preview
    - Visualize profile influence on responses
    - Add profile completeness indicators
+
+4. External Integrations
+   - Internet Search Integration
+     - Real-time web search capabilities
+     - Source citation and attribution
+     - Search result summarization
+     - Safe browsing implementation
+
+   - Slack Integration
+     - Direct message support
+     - Channel monitoring and responses
+     - Thread-aware conversations
+     - Slack command integration
+
+   - Gmail Integration
+     - Email composition assistance
+     - Smart email summarization
+     - Draft management
+     - Email context awareness
+
+5. Bullet Journal System
+   - Digital Bullet Journal Implementation
+     - Daily logs with rapid logging
+     - Monthly and future logs
+     - Collections and indexes
+     - Migration capabilities
+   - Smart Task Management
+     - Bullet syntax (•, -, o, x) support
+     - Task state tracking and updates
+     - Automatic task migration
+     - Priority signifiers
+   - Journal Analytics
+     - Task completion tracking
+     - Habit monitoring
+     - Productivity insights
+     - Time management analysis
+   - Custom Collections
+     - Project trackers
+     - Reading logs
+     - Habit trackers
+     - Meeting notes templates
+   - AI-Enhanced Features
+     - Smart task categorization
+     - Pattern recognition in habits
+     - Automated index generation
+     - Context-aware task suggestions
+
+6. Investment Portfolio Management
+   - Portfolio Tracking
+     - Real-time asset monitoring
+     - Multi-currency support
+     - Cryptocurrency integration
+     - Custom portfolio grouping
+   - Investment Analysis
+     - Performance metrics and ROI
+     - Risk assessment
+     - Diversification analysis
+     - Tax lot tracking
+   - Market Intelligence
+     - News sentiment analysis
+     - Market trend detection
+     - Correlation analysis
+     - Economic indicator tracking
+   - Trading Support
+     - Trade journal and history
+     - Strategy backtesting
+     - Position sizing calculator
+     - Risk management tools
+   - AI-Powered Insights
+     - Portfolio optimization suggestions
+     - Market anomaly detection
+     - Pattern recognition in trades
+     - Personalized risk alerts
+
+7. Health Management System
+   - Health Metrics Tracking
+     - Vital signs monitoring
+     - Sleep patterns
+     - Exercise and activity logs
+     - Nutrition tracking
+   - Medical Management
+     - Medication schedules
+     - Appointment tracking
+     - Symptom journal
+     - Medical history organization
+   - Wellness Analytics
+     - Health trend analysis
+     - Correlation detection
+     - Progress visualization
+     - Habit impact assessment
+   - Lifestyle Optimization
+     - Exercise recommendations
+     - Meal planning assistance
+     - Stress management tools
+     - Work-life balance tracking
+   - AI Health Insights
+     - Early warning detection
+     - Lifestyle optimization suggestions
+     - Health pattern recognition
+     - Preventive care recommendations
+
+8. Web Interaction System
+   - Visual Understanding
+     - Screen content analysis
+     - UI element detection
+     - Dynamic content tracking
+     - Visual hierarchy understanding
+   - Action Automation
+     - Form filling
+     - Navigation assistance
+     - Click and type simulation
+     - Workflow automation
+   - Context Awareness
+     - Page state tracking
+     - Session management
+     - Error detection
+     - Dynamic content handling
+   - Security Features
+     - Credential management
+     - Permission handling
+     - Secure data transfer
+     - Activity logging
+   - AI-Enhanced Capabilities
+     - Task understanding
+     - Context-aware actions
+     - Error recovery
+     - Adaptive automation
 
 ### Technical Improvements
 1. Testing
